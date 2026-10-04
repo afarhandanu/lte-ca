@@ -3,6 +3,7 @@
 import hashlib
 import json
 import re
+import shutil
 import struct
 import subprocess
 import zipfile
@@ -14,6 +15,7 @@ EXPECTED = '53bdac74c153bc87760e5cc7fc03f8f89934b18cfba52a6e89e0213ea756af62'
 TARGET = Path('android/telephony/NetworkRegistrationInfo.smali')
 METHOD = re.compile(r'^\.method public setAccessNetworkTechnology\(I\)V\n.*?^\.end method', re.M | re.S)
 DEFAULT_FIELD_VALUE = re.compile(r'^(\.field\b[^=\n]*:[ZBSCIJFD])[ \t]*=[ \t]*(false|0x0|0)[ \t]*$', re.M)
+PINNED_SMALI_VERSION = '2.3.4'
 PATCH = '''.method public setAccessNetworkTechnology(I)V
     .registers 5
 
@@ -41,8 +43,20 @@ PATCH = '''.method public setAccessNetworkTechnology(I)V
 def sha(data):
     return hashlib.sha256(data).hexdigest()
 
+def tool_classpath():
+    jars = sorted((ROOT / 'tools').glob('*.jar'))
+    classpath = []
+    for jar in jars:
+        match = re.match(r'^(baksmali|smali|dexlib2|util)-(.+)\.jar$', jar.name)
+        if match and match.group(2) != PINNED_SMALI_VERSION:
+            continue
+        classpath.append(str(jar))
+    if not classpath:
+        raise RuntimeError('No tool jars found')
+    return ':'.join(classpath)
+
 def run(main, *args):
-    subprocess.run(['java', '-Xmx4g', '-cp', str(ROOT / 'tools/*'), main, *map(str, args)], check=True)
+    subprocess.run(['java', '-Xmx4g', '-cp', tool_classpath(), main, *map(str, args)], check=True)
 
 def disassemble(source, destination):
     run('org.jf.baksmali.Main', 'disassemble', '--api', '30', source, '-o', destination)
@@ -55,6 +69,8 @@ def main():
     if sha(original) != EXPECTED:
         raise SystemExit('STOP: framework.jar differs from the inspected input. Do not bypass this check.')
     build = ROOT / 'build'
+    if build.exists():
+        shutil.rmtree(build)
     build.mkdir(exist_ok=False)
     dist = ROOT / 'dist'
     dist.mkdir(exist_ok=True)
