@@ -1,0 +1,28 @@
+name: Build Magisk ZIP
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Reassemble framework
+        run: |
+          gzip -dc input/framework.jar.gz > input/framework.jar
+          echo '53bdac74c153bc87760e5cc7fc03f8f89934b18cfba52a6e89e0213ea756af62  input/framework.jar' | sha256sum --check
+      - name: Get pinned DEX tools
+        run: mvn -B org.apache.maven.plugins:maven-dependency-plugin:3.8.1:copy-dependencies -DoutputDirectory=tools
+      - name: Patch, rebuild and verify
+        run: python3 scripts/build.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Force-LTE-CA-Magisk
+          path: dist/*
+          if-no-files-found: error
