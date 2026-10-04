@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 EXPECTED = '53bdac74c153bc87760e5cc7fc03f8f89934b18cfba52a6e89e0213ea756af62'
 TARGET = Path('android/telephony/NetworkRegistrationInfo.smali')
 METHOD = re.compile(r'^\.method public setAccessNetworkTechnology\(I\)V\n.*?^\.end method', re.M | re.S)
+DEFAULT_FIELD_VALUE = re.compile(r'^(\.field\b[^=\n]*:[ZBSCIJFD])[ \t]*=[ \t]*(false|0x0|0)[ \t]*$', re.M)
 PATCH = '''.method public setAccessNetworkTechnology(I)V
     .registers 5
 
@@ -45,6 +46,9 @@ def run(main, *args):
 
 def disassemble(source, destination):
     run('org.jf.baksmali.Main', 'disassemble', '--api', '30', source, '-o', destination)
+
+def canonicalize_smali(text):
+    return DEFAULT_FIELD_VALUE.sub(r'\1', text)
 
 def main():
     original = (ROOT / 'input/framework.jar').read_bytes()
@@ -95,7 +99,8 @@ def main():
             if 'persist.sys.radio.force_lte_ca' not in METHOD.search(b).group():
                 raise RuntimeError('Patch missing after rebuild')
         elif a != b:
-            raise RuntimeError(f'Unexpected round-trip change: {rel}')
+            if canonicalize_smali(a) != canonicalize_smali(b):
+                raise RuntimeError(f'Unexpected round-trip change: {rel}')
     patched_jar = build / 'framework.jar'
     with zipfile.ZipFile(ROOT / 'input/framework.jar') as source, zipfile.ZipFile(patched_jar, 'w') as dest:
         for info in source.infolist():
