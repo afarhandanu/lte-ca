@@ -16,7 +16,9 @@ jobs:
       - name: Prepare and verify framework
         run: python3 scripts/prepare.py
       - name: Get pinned DEX tools
-        run: mvn -B org.apache.maven.plugins:maven-dependency-plugin:3.8.1:copy-dependencies -DoutputDirectory=tools
+        run: |
+          rm -rf tools
+          mvn -B org.apache.maven.plugins:maven-dependency-plugin:3.8.1:copy-dependencies -DoutputDirectory=tools
       - name: Patch, rebuild and verify
         id: package
         run: python3 scripts/build.py
