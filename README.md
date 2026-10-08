@@ -8,7 +8,7 @@ Bahan build modul Magisk khusus framework.jar yang diberikan pengguna (ROM dilap
 2. Upload seluruh isi proyek ke root repository, termasuk folder tersembunyi `.github`. Jangan upload ZIP proyek sebagai satu file.
 3. Framework disertakan sebagai `input/framework.jar.gz` (sekitar 16 MB). Upload file ini apa adanya, jangan diekstrak lagi. Workflow mengekstraknya dan memeriksa SHA-256 otomatis. Pastikan `.github/workflows/build.yml` ikut terunggah; jika folder tersembunyi tidak muncul, buat file melalui Add file → Create new file dengan path tersebut dan salin isinya. Tidak perlu framework.jar utuh atau file .part. Jangan gunakan Git LFS dengan workflow ini.
 4. Di tab Actions, pilih **Build Magisk ZIP**, lalu **Run workflow**. Workflow harus ada di default branch.
-5. Setelah sukses, unduh artifact **Force-LTE-CA-Magisk**. Ekstrak pembungkus artifact tersebut; file instalasinya adalah `Force-LTE-CA-exact-framework.zip`.
+5. Setelah sukses, unduh artifact **Force-LTE-CA-…**. Ekstrak pembungkus artifact tersebut; file instalasinya adalah `Force-LTE-CA-<hash>-<run>-<attempt>-<unique>.zip`.
 6. Instal ZIP modul melalui aplikasi Magisk, lalu reboot. Jangan flash ZIP proyek atau ZIP pembungkus artifact.
 
 ## Perubahan
@@ -39,3 +39,6 @@ Referensi: https://topjohnwu.github.io/Magisk/guides.html dan https://github.com
 
 
 Untuk mengganti framework, upload input/framework.jar.gz baru dan jalankan workflow baru. Checksum otomatis tidak menjamin kompatibilitas patch dengan ROM lain; target tetap kelas NetworkRegistrationInfo pada classes4.dex. Installer tetap menolak framework HP yang berbeda dari sumber build.
+
+
+Setiap build menggunakan subfolder build dan dist yang unik. Folder lama tidak dihapus dan tidak ikut diunggah sebagai artifact. Nama ZIP/artifact memuat hash framework, run ID, attempt, dan suffix acak. ID modul Magisk tetap force_lte_ca_exact agar pembaruan menggantikan modul lama, bukan memasang dua pengganti framework sekaligus.

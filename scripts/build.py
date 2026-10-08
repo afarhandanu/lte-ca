@@ -2,6 +2,8 @@
 """Compute the source checksum at build time and embed it in the installer."""
 import hashlib
 import json
+import os
+import uuid
 import re
 import struct
 import subprocess
@@ -49,10 +51,17 @@ def main():
     original = (ROOT / 'input/framework.jar').read_bytes()
     EXPECTED = sha(original)
     print('Source framework SHA256:', EXPECTED)
-    build = ROOT / 'build'
-    build.mkdir(exist_ok=False)
-    dist = ROOT / 'dist'
-    dist.mkdir(exist_ok=True)
+    run_id = re.sub(r'[^A-Za-z0-9_-]', '_', os.environ.get('GITHUB_RUN_ID', 'local'))
+    attempt = re.sub(r'[^A-Za-z0-9_-]', '_', os.environ.get('GITHUB_RUN_ATTEMPT', '1'))
+    build_tag = f'{EXPECTED[:12]}-{run_id}-{attempt}-{uuid.uuid4().hex[:12]}'
+    build = ROOT / 'build' / build_tag
+    build.mkdir(parents=True, exist_ok=False)
+    dist = ROOT / 'dist' / build_tag
+    dist.mkdir(parents=True, exist_ok=False)
+    if os.environ.get('GITHUB_OUTPUT'):
+        with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+            output.write(f'artifact_name=Force-LTE-CA-{build_tag}\n')
+            output.write(f'artifact_path={dist.relative_to(ROOT).as_posix()}/*\n')
     dex_path = build / 'classes4.dex'
     with zipfile.ZipFile(ROOT / 'input/framework.jar') as source:
         if source.testzip() is not None:
@@ -130,12 +139,12 @@ set_perm_recursive "$MODPATH" 0 0 0755 0644
     for name, value in module.items():
         if name.endswith('.sh'):
             subprocess.run(['sh', '-n'], input=value, text=True, check=True)
-    output = dist / 'Force-LTE-CA-exact-framework.zip'
+    output = dist / f'Force-LTE-CA-{build_tag}.zip'
     with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as z:
         for name, value in module.items():
             z.writestr(name, value)
         z.write(patched_jar, 'system/framework/framework.jar')
-    report = {'input_sha256': EXPECTED, 'patched_jar_sha256': payload_hash,
+    report = {'build_tag': build_tag, 'input_sha256': EXPECTED, 'patched_jar_sha256': payload_hash,
               'module_sha256': sha(output.read_bytes()), 'changed_entry': 'classes4.dex',
               'roundtrip_classes_verified': len(before_files), 'device_boot_tested': False}
     (dist / 'build-report.json').write_text(json.dumps(report, indent=2) + '\n')
