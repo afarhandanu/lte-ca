@@ -13,7 +13,7 @@ Bahan build modul Magisk khusus framework.jar yang diberikan pengguna (ROM dilap
 
 ## Perubahan
 
-Hanya `NetworkRegistrationInfo.setAccessNetworkTechnology(int)` pada `classes4.dex` yang dipatch. DEX lain dan seluruh entri JAR lainnya dipertahankan. Smali/baksmali 2.5.2 digunakan untuk DEX 039; parameter API 30 memilih format bytecode yang sama, bukan mengubah versi ROM menjadi Android 11.
+Hanya `NetworkRegistrationInfo.setAccessNetworkTechnology(int)` pada `classes4.dex` yang dipatch. DEX lain dan seluruh entri JAR lainnya dipertahankan. Smali/baksmali 3.0.10 (fork com.android.tools.smali) digunakan untuk DEX 039; parameter API 30 memilih format bytecode yang sama, bukan mengubah versi ROM menjadi Android 11.
 
 Saat properti `persist.sys.radio.force_lte_ca` aktif, input LTE (13) menetapkan flag CA menjadi true. Input LTE_CA (19) tetap dinormalisasi ke LTE dengan flag CA true, seperti kode awal. Perilaku tanpa reset flag eksplisit dipertahankan dari bahan patch. Modul mengaktifkan properti saat boot melalui `system.prop` Magisk; tidak menyediakan switch baru dalam Settings dan tidak mengedit Settings.apk.
 
