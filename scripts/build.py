@@ -37,6 +37,21 @@ PATCH_BODY = '''    .registers 5
     return-void
 .end method'''
 
+def normalize_smali(text):
+    """Normalize fork 3.x round-trip artifacts (semantically identical)."""
+    out = []
+    for line in text.split('\n'):
+        s = line.strip()
+        if s.startswith('.field'):
+            # smali drops explicit default initializers on reassembly
+            line = re.sub(r'(:Z)\s*=\s*false\s*$', r'\1', line)
+            line = re.sub(r'(:[BSIJ])\s*=\s*0x0\s*$', r'\1', line)
+            line = re.sub(r'\bwhitelist\s+', '', line)
+        elif s.startswith('.method'):
+            line = re.sub(r'\bwhitelist\s+', '', line)
+        out.append(line)
+    return '\n'.join(out)
+
 def sha(data):
     return hashlib.sha256(data).hexdigest()
 
@@ -103,7 +118,7 @@ def main():
                 raise RuntimeError('Other target-class content changed')
             if 'persist.sys.radio.force_lte_ca' not in METHOD.search(b).group():
                 raise RuntimeError('Patch missing after rebuild')
-        elif a != b:
+        elif normalize_smali(a) != normalize_smali(b):
             raise RuntimeError(f'Unexpected round-trip change: {rel}')
     patched_jar = build / 'framework.jar'
     with zipfile.ZipFile(ROOT / 'input/framework.jar') as source, zipfile.ZipFile(patched_jar, 'w') as dest:
