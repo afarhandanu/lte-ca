@@ -13,10 +13,8 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Reassemble framework
-        run: |
-          gzip -dc input/framework.jar.gz > input/framework.jar
-          echo '53bdac74c153bc87760e5cc7fc03f8f89934b18cfba52a6e89e0213ea756af62  input/framework.jar' | sha256sum --check
+      - name: Prepare and verify framework
+        run: python3 scripts/prepare.py
       - name: Get pinned DEX tools
         run: mvn -B org.apache.maven.plugins:maven-dependency-plugin:3.8.1:copy-dependencies -DoutputDirectory=tools
       - name: Patch, rebuild and verify
