@@ -18,9 +18,10 @@ jobs:
       - name: Get pinned DEX tools
         run: mvn -B org.apache.maven.plugins:maven-dependency-plugin:3.8.1:copy-dependencies -DoutputDirectory=tools
       - name: Patch, rebuild and verify
+        id: package
         run: python3 scripts/build.py
       - uses: actions/upload-artifact@v4
         with:
-          name: Force-LTE-CA-Magisk
-          path: dist/*
+          name: ${{ steps.package.outputs.artifact_name }}
+          path: ${{ steps.package.outputs.artifact_path }}
           if-no-files-found: error
