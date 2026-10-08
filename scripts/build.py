@@ -13,9 +13,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 TARGET = Path('android/telephony/NetworkRegistrationInfo.smali')
-METHOD = re.compile(r'^\.method public setAccessNetworkTechnology\(I\)V\n.*?^\.end method', re.M | re.S)
-PATCH = '''.method public setAccessNetworkTechnology(I)V
-    .registers 5
+METHOD = re.compile(r'^\.method public((?: [\w-]+)*) setAccessNetworkTechnology\(I\)V\n.*?^\.end method', re.M | re.S)
+PATCH_BODY = '''    .registers 5
 
     const-string/jumbo v0, "persist.sys.radio.force_lte_ca"
     const/4 v1, 0x0
@@ -76,7 +75,9 @@ def main():
         raise RuntimeError('Expected exactly one target method')
     old_method = matches[0].group()
     (dist / 'original-method.smali.txt').write_text(old_method + '\n')
-    patched = METHOD.sub(lambda _: PATCH, text)
+    def make_patch(match):
+        return f'.method public{match.group(1)} setAccessNetworkTechnology(I)V\n{PATCH_BODY}'
+    patched = METHOD.sub(make_patch, text)
     target.write_text(patched)
     new_dex = build / 'patched.dex'
     run('com.android.tools.smali.smali.Main', 'assemble', '--api', '30', before, '-o', new_dex)
