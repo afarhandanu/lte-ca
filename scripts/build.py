@@ -44,7 +44,7 @@ def run(main, *args):
     subprocess.run(['java', '-Xmx4g', '-cp', str(ROOT / 'tools/*'), main, *map(str, args)], check=True)
 
 def disassemble(source, destination):
-    run('com.android.tools.smali.baksmali.Main', 'disassemble', '--api', '30', source, '-o', destination)
+    run('com.android.tools.smali.baksmali.Main', 'disassemble', '--api', '29', source, '-o', destination)
 
 def main():
     original = (ROOT / 'input/framework.jar').read_bytes()
@@ -80,7 +80,7 @@ def main():
     patched = METHOD.sub(make_patch, text)
     target.write_text(patched)
     new_dex = build / 'patched.dex'
-    run('com.android.tools.smali.smali.Main', 'assemble', '--api', '30', before, '-o', new_dex)
+    run('com.android.tools.smali.smali.Main', 'assemble', '--api', '29', before, '-o', new_dex)
     data = new_dex.read_bytes()
     if data[:8] != b'dex\n039\0':
         raise RuntimeError('Unexpected DEX version')
