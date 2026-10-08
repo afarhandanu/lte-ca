@@ -21,8 +21,7 @@ Tidak mengunci LTE, mengubah APN/band, mengaktifkan VoLTE, atau memerintahkan mo
 
 ## Kecocokan dan pemulihan
 
-SHA-256 input yang wajib cocok:
-`8120c5d816874187d48a879ebb60b92cd535790a9479104fd4e55c7faf54bd4c`
+SHA-256 input dihitung otomatis dari framework.jar yang diunggah setiap build. Tidak ada checksum sumber yang perlu diedit manual. Nilai hasil perhitungan disimpan pada build-report.json dan ditanam dalam installer Magisk.
 
 Installer membandingkan framework yang sedang terlihat di `/system/framework/framework.jar` dengan hash ini. Perbedaan menyebabkan instalasi dibatalkan. Pemeriksaan ini bukan jaminan bisa boot: boot-image/ART, optimisasi vendor, dan konflik modul lain tetap bisa berpengaruh. Belum diuji pada HP.
 
@@ -32,8 +31,11 @@ Jika sistem masih bisa boot: nonaktifkan/hapus modul di Magisk, lalu reboot. Jik
 
 ## Validasi build
 
-Pipeline memeriksa hash input, integritas JAR, checksum DEX, melakukan disassembly ulang hasil kompilasi, dan membandingkan seluruh kelas di DEX target. Build gagal jika ada perubahan di luar method target. Laporan checksum dan method asli tersedia di artifact. Ini validasi statis, bukan pengujian boot.
+Pipeline menghitung hash input, memeriksa integritas JAR dan checksum DEX, melakukan disassembly ulang hasil kompilasi, dan membandingkan seluruh kelas di DEX target. Build gagal jika ada perubahan di luar method target. Laporan checksum dan method asli tersedia di artifact. Ini validasi statis, bukan pengujian boot.
 
 Paket proyek disiapkan dan diperiksa secara lokal, tetapi kompilasi Java/DEX belum dijalankan di lingkungan pembuat karena akses jaringan untuk dependency tidak tersedia. Hasil GitHub Actions perlu diperiksa; jangan menganggap ZIP modul sudah diuji pada perangkat.
 
 Referensi: https://topjohnwu.github.io/Magisk/guides.html dan https://github.com/JesusFreke/smali/wiki
+
+
+Untuk mengganti framework, upload input/framework.jar.gz baru dan jalankan workflow baru. Checksum otomatis tidak menjamin kompatibilitas patch dengan ROM lain; target tetap kelas NetworkRegistrationInfo pada classes4.dex. Installer tetap menolak framework HP yang berbeda dari sumber build.
