@@ -22,7 +22,7 @@ Tidak mengunci LTE, mengubah APN/band, mengaktifkan VoLTE, atau memerintahkan mo
 ## Kecocokan dan pemulihan
 
 SHA-256 input yang wajib cocok:
-`53bdac74c153bc87760e5cc7fc03f8f89934b18cfba52a6e89e0213ea756af62`
+`8120c5d816874187d48a879ebb60b92cd535790a9479104fd4e55c7faf54bd4c`
 
 Installer membandingkan framework yang sedang terlihat di `/system/framework/framework.jar` dengan hash ini. Perbedaan menyebabkan instalasi dibatalkan. Pemeriksaan ini bukan jaminan bisa boot: boot-image/ART, optimisasi vendor, dan konflik modul lain tetap bisa berpengaruh. Belum diuji pada HP.
 
